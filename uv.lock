@@ -160,7 +160,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.41,<3" },
     { name = "structlog", specifier = ">=25.4.0,<26" },
     { name = "tree-sitter-language-pack", specifier = ">=1.13.1" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.51.0,<1" },
 ]
 
 [package.metadata.requires-dev]
