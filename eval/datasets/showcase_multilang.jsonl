@@ -1,0 +1,5 @@
+{"question":"Where is create_token implemented?","relevant":[{"path":"python/tokens.py","symbol":"create_token"}],"tags":["python","symbol"]}
+{"question":"Which Python function validates login credentials?","relevant":[{"path":"python/auth.py","symbol":"login"}],"tags":["python","semantic"]}
+{"question":"Where does Rust issue a token?","relevant":[{"path":"rust/src/lib.rs","symbol":"impl TokenIssuer.issue"}],"tags":["rust","method"]}
+{"question":"Find the TypeScript login submission function","relevant":[{"path":"web/auth.ts","symbol":"submitLogin"}],"tags":["typescript","symbol"]}
+{"question":"Where is the JavaScript login audit event created?","relevant":[{"path":"scripts/audit.js","symbol":"recordLogin"}],"tags":["javascript","semantic"]}

@@ -1,0 +1,5 @@
+{"workflow":"answer_question","question":"Where is create_token implemented?","expected_paths":["src/tokens.py"]}
+{"workflow":"explain_module","question":"Explain the authentication module","expected_paths":["src/auth.py"]}
+{"workflow":"trace_symbol","question":"Trace calls to create_token","expected_paths":["src/tokens.py","src/auth.py"]}
+{"workflow":"auto","question":"Which module creates authentication tokens?","expected_paths":["src/tokens.py"]}
+{"workflow":"auto","question":"Explain the auth module and its entry points","expected_paths":["src/auth.py"]}

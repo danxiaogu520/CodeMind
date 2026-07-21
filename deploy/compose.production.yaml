@@ -1,0 +1,38 @@
+services:
+  api:
+    environment:
+      CODEMIND_ENVIRONMENT: production
+      CODEMIND_LOG_LEVEL: INFO
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  worker:
+    environment:
+      CODEMIND_ENVIRONMENT: production
+      CODEMIND_LOG_LEVEL: INFO
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+        reservations:
+          memory: 1G
+
+  postgres:
+    ports: !reset []
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  qdrant:
+    ports: !reset []
+    deploy:
+      resources:
+        limits:
+          memory: 4G

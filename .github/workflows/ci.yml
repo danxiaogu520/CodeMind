@@ -1,0 +1,68 @@
+name: 持续集成
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: 代码质量与测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 安装 uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.28"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: 安装 Python
+        run: uv python install 3.12
+      - name: 按锁文件安装依赖
+        run: uv sync --locked --all-groups
+      - name: Ruff 格式检查
+        run: uv run ruff format --check .
+      - name: Ruff 静态检查
+        run: uv run ruff check .
+      - name: Pyright 严格类型检查
+        run: uv run pyright
+      - name: 架构依赖契约
+        run: uv run lint-imports
+      - name: 自动化测试
+        run: uv run pytest -q
+      - name: 构建并检查 Python 包
+        run: |
+          uv build
+          uv run python -c "from importlib.resources import files; assert files('codemind.interfaces.http.static').joinpath('demo.html').is_file()"
+
+  container-smoke:
+    name: 容器端到端冒烟
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 校验 Compose 配置
+        run: docker compose config --quiet
+      - name: 构建并启动默认离线栈
+        run: docker compose up -d --build --wait
+      - name: 验证 Readiness
+        run: curl --fail --show-error http://127.0.0.1:8000/health/ready
+      - name: 执行完整演示
+        run: docker compose --profile demo run --rm demo
+      - name: 输出故障日志
+        if: failure()
+        run: docker compose logs --no-color --tail=300
+      - name: 清理测试栈
+        if: always()
+        run: docker compose --profile demo down --volumes --remove-orphans

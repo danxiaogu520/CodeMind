@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeMind · Repository Intelligence</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07100d; --panel:#0e1b16; --line:#203b30; --ink:#ecf8f1; --muted:#8fa99c; --mint:#5ee6a8; --amber:#ffc66d; --red:#ff7f78; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font:15px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--ink); background:radial-gradient(circle at 85% 0,#153e2d 0,transparent 34%),var(--bg); }
+    body:before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.16; background-image:linear-gradient(#1b332a 1px,transparent 1px),linear-gradient(90deg,#1b332a 1px,transparent 1px); background-size:32px 32px; }
+    main { position:relative; width:min(1240px,94vw); margin:auto; padding:52px 0 72px; }
+    header { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:32px; }
+    h1 { margin:0; font:700 clamp(36px,7vw,76px)/.9 system-ui,sans-serif; letter-spacing:-.07em; }
+    h1 span { color:var(--mint); }
+    .tag { color:var(--mint); text-transform:uppercase; letter-spacing:.16em; font-size:12px; }
+    .sub { max-width:570px; color:var(--muted); margin:16px 0 0; }
+    .status { display:flex; align-items:center; gap:9px; color:var(--muted); white-space:nowrap; }
+    .dot { width:9px; height:9px; border-radius:50%; background:var(--amber); box-shadow:0 0 16px currentColor; }
+    .dot.ok { background:var(--mint); }
+    .grid { display:grid; grid-template-columns:minmax(300px,.8fr) minmax(420px,1.45fr); gap:18px; align-items:start; }
+    .panel { background:color-mix(in srgb,var(--panel) 92%,transparent); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 18px 70px #0005; backdrop-filter:blur(12px); }
+    .stack { display:grid; gap:18px; }
+    h2 { font:650 16px system-ui,sans-serif; margin:0 0 16px; letter-spacing:.01em; }
+    h2 b { color:var(--mint); margin-right:8px; }
+    label { display:block; color:var(--muted); font-size:12px; margin:12px 0 6px; }
+    input,select,textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 11px; color:var(--ink); background:#07110d; font:inherit; outline:none; }
+    textarea { resize:vertical; min-height:84px; }
+    input:focus,select:focus,textarea:focus { border-color:var(--mint); box-shadow:0 0 0 3px #5ee6a819; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    button { width:100%; margin-top:14px; border:0; border-radius:8px; padding:11px 14px; background:var(--mint); color:#042014; font:700 13px system-ui,sans-serif; cursor:pointer; }
+    button.secondary { background:#172b23; color:var(--ink); border:1px solid var(--line); }
+    button:disabled { opacity:.45; cursor:wait; }
+    .terminal { min-height:180px; max-height:300px; overflow:auto; background:#050b08; border:1px solid #182c24; border-radius:9px; padding:13px; color:#b9d2c5; font-size:12px; white-space:pre-wrap; }
+    .terminal .event { color:var(--mint); }
+    .answer { min-height:140px; white-space:pre-wrap; color:#dcebe3; }
+    .citations,.memories { display:grid; gap:8px; margin-top:14px; }
+    .chip { border-left:3px solid var(--mint); background:#09130f; padding:9px 11px; color:var(--muted); overflow-wrap:anywhere; }
+    .chip strong { color:var(--ink); }
+    .memory { border:1px solid var(--line); border-radius:8px; padding:11px; background:#09130f; }
+    .memory .layer { color:var(--mint); text-transform:uppercase; font-size:11px; letter-spacing:.12em; }
+    .memory p { color:var(--muted); margin:6px 0 0; max-height:68px; overflow:hidden; }
+    .meta { color:var(--muted); font-size:12px; margin-top:10px; }
+    @media (max-width:850px) { header { align-items:start; flex-direction:column; } .grid { grid-template-columns:1fr; } main { padding-top:30px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div><div class="tag">RAG × LangGraph × Code Intelligence</div><h1>Code<span>Mind</span></h1><p class="sub">将代码仓库转换为可检索、可追踪、可持续更新的工程知识。导入一个项目，然后观察 Agent 如何规划、检索、验证引用并沉淀记忆。</p></div>
+    <div class="status"><i id="healthDot" class="dot"></i><span id="healthText">checking services</span></div>
+  </header>
+  <div class="grid">
+    <div class="stack">
+      <section class="panel">
+        <h2><b>01</b>Import repository</h2>
+        <label>Source type</label><select id="sourceType"><option value="local">Local fixture</option><option value="git">Public Git URL</option></select>
+        <label>Name</label><input id="repoName" value="codemind-demo">
+        <label>Path or URL</label><input id="source" value="/fixtures/sample_python">
+        <button id="importBtn">Build knowledge base</button>
+        <div id="repoMeta" class="meta">No repository selected.</div>
+      </section>
+      <section class="panel">
+        <h2><b>02</b>Ask the Agent</h2>
+        <label>Repository ID</label><input id="repoId" placeholder="Created automatically or paste an ID">
+        <div class="row"><div><label>Workflow</label><select id="workflow"><option value="auto">auto</option><option value="answer_question">answer_question</option><option value="explain_module">explain_module</option><option value="trace_symbol" selected>trace_symbol</option></select></div><div><label>Session</label><input id="session" value="browser-demo"></div></div>
+        <label>Question</label><textarea id="question">Trace calls to create_token</textarea>
+        <button id="askBtn">Run grounded analysis</button>
+        <button id="memoryBtn" class="secondary">Refresh memory</button>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="panel"><h2><b>LIVE</b>Agent event stream</h2><div id="terminal" class="terminal">$ waiting for a run…</div></section>
+      <section class="panel"><h2><b>03</b>Grounded answer</h2><div id="answer" class="answer">The final answer and verified citations will appear here.</div><div id="citations" class="citations"></div></section>
+      <section class="panel"><h2><b>MEM</b>Layered project context</h2><div id="memories" class="memories"><span class="meta">Run an analysis to create Session and Episodic memory.</span></div></section>
+    </div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id), api='';
+const log=(kind,data)=>{const t=$('terminal'); const line=document.createElement('div'); line.className='event'; line.textContent=`[${kind}] ${typeof data==='string'?data:JSON.stringify(data)}`; t.appendChild(line); t.scrollTop=t.scrollHeight;};
+const request=async(path,options={})=>{const response=await fetch(api+path,{headers:{'Content-Type':'application/json'},...options}); if(!response.ok) throw new Error(`${response.status} ${await response.text()}`); return response.json();};
+const busy=(id,value)=>{$(id).disabled=value;};
+async function health(){try{await request('/health/ready'); $('healthDot').classList.add('ok'); $('healthText').textContent='all systems ready';}catch{$('healthText').textContent='dependencies unavailable';}}
+async function waitJob(id){for(let i=0;i<720;i++){const job=await request(`/api/v1/index-jobs/${id}`); $('repoMeta').textContent=`${job.stage} · ${job.progress.processed}/${job.progress.total} · embedded ${job.delta.chunks_embedded}, reused ${job.delta.chunks_reused}`; if(['completed','partial','failed'].includes(job.status)) return job; await new Promise(r=>setTimeout(r,250));} throw new Error('Index timeout');}
+$('importBtn').onclick=async()=>{busy('importBtn',true); try{const type=$('sourceType').value, source={type}; source[type==='local'?'path':'url']=$('source').value; const made=await request('/api/v1/repositories',{method:'POST',body:JSON.stringify({name:$('repoName').value,source})}); $('repoId').value=made.repository_id; await waitJob(made.job_id); log('index.completed',{repository_id:made.repository_id});}catch(e){log('error',e.message);}finally{busy('importBtn',false);}};
+async function finalRun(id){for(let i=0;i<900;i++){const run=await request(`/api/v1/runs/${id}`); if(['completed','partial','failed','cancelled'].includes(run.status)) return run; await new Promise(r=>setTimeout(r,200));} throw new Error('Run timeout');}
+function renderRun(run){const a=run.answer; $('answer').textContent=a?.text||run.error_summary||'No answer.'; const root=$('citations'); root.replaceChildren(); for(const c of a?.citations||[]){const div=document.createElement('div'); div.className='chip'; const strong=document.createElement('strong'); strong.textContent=`${c.path}:${c.start_line}-${c.end_line}`; div.append(strong,document.createTextNode(` · ${c.evidence_id}`)); root.appendChild(div);}}
+async function memories(){const repo=$('repoId').value.trim(); if(!repo)return; const params=new URLSearchParams({query:$('question').value,session_id:$('session').value}); const data=await request(`/api/v1/repositories/${repo}/memories?${params}`); const root=$('memories'); root.replaceChildren(); for(const m of data.items){const div=document.createElement('div'); div.className='memory'; const layer=document.createElement('div'); layer.className='layer'; layer.textContent=`${m.layer} · ${m.scope_key}`; const p=document.createElement('p'); p.textContent=m.content; div.append(layer,p); root.appendChild(div);} if(!data.items.length)root.textContent='No relevant memory yet.';}
+$('askBtn').onclick=async()=>{const repo=$('repoId').value.trim(); if(!repo){log('error','Repository ID is required');return;} busy('askBtn',true); $('terminal').replaceChildren(); try{const run=await request(`/api/v1/repositories/${repo}/runs`,{method:'POST',body:JSON.stringify({question:$('question').value,workflow:$('workflow').value,session_id:$('session').value})}); const events=new EventSource(`/api/v1/runs/${run.id}/events`); for(const type of ['run.started','step.started','step.completed','tool.completed','memory.recalled','memory.compacted','memory.persisted','run.completed','run.partial','run.failed'])events.addEventListener(type,e=>log(type,JSON.parse(e.data))); const result=await finalRun(run.id); events.close(); renderRun(result); await memories();}catch(e){log('error',e.message);}finally{busy('askBtn',false);}};
+$('memoryBtn').onclick=()=>memories().catch(e=>log('error',e.message));
+$('sourceType').onchange=()=>{$('source').value=$('sourceType').value==='local'?'/fixtures/sample_python':'https://github.com/pypa/sampleproject.git';};
+health();
+</script>
+</body>
+</html>

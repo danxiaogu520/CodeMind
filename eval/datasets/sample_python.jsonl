@@ -1,0 +1,3 @@
+{"question":"Where is create_token implemented?","relevant":[{"path":"src/tokens.py","symbol":"create_token"}],"tags":["exact-symbol","python"]}
+{"question":"Explain AuthService.login","relevant":[{"path":"src/auth.py","symbol":"AuthService.login"}],"tags":["qualified-symbol","python"]}
+{"question":"Which module creates authentication tokens?","relevant":[{"path":"src/tokens.py","symbol":"create_token"}],"tags":["semantic","python"]}

@@ -1,0 +1,189 @@
+name: codemind
+
+services:
+  api:
+    image: codemind-app:latest
+    build:
+      context: .
+    environment:
+      CODEMIND_ENVIRONMENT: development
+      CODEMIND_LOG_FORMAT: json
+      CODEMIND_API_HOST: 0.0.0.0
+      CODEMIND_DATABASE_URL: postgresql+asyncpg://codemind:codemind@postgres:5432/codemind
+      CODEMIND_CHECKPOINT_DATABASE_URL: postgresql://codemind:codemind@postgres:5432/codemind
+      CODEMIND_QDRANT_URL: http://qdrant:6333
+      CODEMIND_LEXICAL_INDEX_DIR: /data/indexes
+      LANGGRAPH_STRICT_MSGPACK: "true"
+      CODEMIND_AGENT_NODE_DELAY_SECONDS: ${CODEMIND_AGENT_NODE_DELAY_SECONDS:-0}
+      CODEMIND_INDEX_RETAINED_VERSIONS: ${CODEMIND_INDEX_RETAINED_VERSIONS:-3}
+    ports:
+      - "${CODEMIND_API_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    stop_grace_period: 20s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - index-data:/data/indexes:ro
+
+  worker:
+    image: codemind-app:latest
+    build:
+      context: .
+    command: ["codemind-worker"]
+    environment:
+      CODEMIND_ENVIRONMENT: development
+      CODEMIND_LOG_FORMAT: json
+      CODEMIND_DATABASE_URL: postgresql+asyncpg://codemind:codemind@postgres:5432/codemind
+      CODEMIND_QDRANT_URL: http://qdrant:6333
+      CODEMIND_REPOSITORY_WORK_DIR: /data/repositories
+      CODEMIND_ALLOWED_REPOSITORY_ROOTS: '["/repositories", "/fixtures"]'
+      CODEMIND_LEXICAL_INDEX_DIR: /data/indexes
+      CODEMIND_INDEX_RETAINED_VERSIONS: ${CODEMIND_INDEX_RETAINED_VERSIONS:-3}
+      CODEMIND_PARSER_TIMEOUT_SECONDS: ${CODEMIND_PARSER_TIMEOUT_SECONDS:-30}
+      CODEMIND_INDEX_JOB_STALE_AFTER_SECONDS: ${CODEMIND_INDEX_JOB_STALE_AFTER_SECONDS:-120}
+      CODEMIND_INDEX_JOB_MAX_ATTEMPTS: ${CODEMIND_INDEX_JOB_MAX_ATTEMPTS:-3}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_healthy
+    volumes:
+      - ./data/repositories:/repositories:ro
+      - ./tests/fixtures/repos:/fixtures:ro
+      - repository-work:/data/repositories
+      - index-data:/data/indexes
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import pathlib; raise SystemExit('codemind-worker' not in pathlib.Path('/proc/1/cmdline').read_text())"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  migrate:
+    image: codemind-app:latest
+    build:
+      context: .
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      CODEMIND_DATABASE_URL: postgresql+asyncpg://codemind:codemind@postgres:5432/codemind
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+
+  demo:
+    image: codemind-app:latest
+    build:
+      context: .
+    command:
+      - codemind-demo
+      - --base-url
+      - http://api:8000
+      - demo
+      - --source
+      - /fixtures/sample_python
+    profiles: ["demo"]
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: "no"
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: codemind
+      POSTGRES_USER: codemind
+      POSTGRES_PASSWORD: codemind
+    ports:
+      - "${CODEMIND_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codemind -d codemind"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  qdrant:
+    image: qdrant/qdrant:v1.15.1
+    ports:
+      - "${CODEMIND_QDRANT_HTTP_PORT:-6333}:6333"
+      - "${CODEMIND_QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - "</dev/tcp/127.0.0.1/6333"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres-data:
+  qdrant-data:
+  repository-work:
+  index-data:
