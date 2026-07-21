@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 FROM ghcr.io/astral-sh/uv:0.11.28 AS uv
 
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
@@ -12,7 +12,7 @@ RUN uv sync --locked --no-dev && \
     XDG_CACHE_HOME=/app/.cache .venv/bin/python -c \
     "from tree_sitter_language_pack import get_parser; [get_parser(name) for name in ('python', 'rust', 'javascript', 'typescript')]"
 
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 LABEL org.opencontainers.image.title="CodeMind" \
       org.opencontainers.image.description="Repository-level RAG Agent for code understanding" \
       org.opencontainers.image.version="0.1.0" \
