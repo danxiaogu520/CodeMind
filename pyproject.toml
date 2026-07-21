@@ -39,7 +39,7 @@ dev = [
   "httpx>=0.28.1,<1",
   "import-linter>=2.3,<3",
   "pyright>=1.1.403,<2",
-  "pytest>=8.4.1,<9",
+  "pytest>=9.1.1,<10",
   "pytest-asyncio>=1.1.0,<2",
   "ruff>=0.12.4,<1",
 ]
