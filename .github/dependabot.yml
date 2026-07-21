@@ -8,7 +8,15 @@ updates:
       time: "03:00"
       timezone: Asia/Shanghai
     open-pull-requests-limit: 5
+    versioning-strategy: lockfile-only
     labels: [dependencies, python]
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -19,6 +27,9 @@ updates:
       timezone: Asia/Shanghai
     open-pull-requests-limit: 5
     labels: [dependencies, ci]
+    groups:
+      github-actions:
+        patterns: ["*"]
 
   - package-ecosystem: docker
     directory: /
@@ -29,3 +40,9 @@ updates:
       timezone: Asia/Shanghai
     open-pull-requests-limit: 5
     labels: [dependencies, docker]
+    groups:
+      docker-images:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: python
+        versions: [">=3.13"]
