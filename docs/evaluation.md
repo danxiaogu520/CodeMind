@@ -69,3 +69,17 @@
 | Polyglot Retrieval | 5 | Recall@5/10、MRR、nDCG@10 均 1.00 | avg 39.5ms，P95 56.0ms |
 
 Polyglot 数据集覆盖 Python、Rust、TypeScript 和 JavaScript。以上是小型 fixture 的回归基线，不应外推为 10 万 Chunk 的容量结论；大仓库性能目标仍需独立压测。
+
+## 6. Phase 7 真实仓库与图分析评测扩展
+
+后续评测参考 [`code-review-graph` 借鉴分析](reference-code-review-graph.md)，但使用 CodeMind 自身的版本化 Evidence 和工作流契约。至少增加：
+
+- 固定完整 commit SHA 的真实公开仓库集，保存许可证、模型、Parser、Tokenizer、算法版本和随机种子；
+- `grep/read-top-k` Agent、Hybrid Retrieval、Hybrid + Graph Traversal 三组可比策略；
+- 多跳任务分别记录 anchor recall、neighbor accuracy、关系方向、路径和引用正确性；
+- 影响面同时使用 graph-derived 理论上界、真实 commit co-change 和人工 curated 真值；
+- Token 指标区分全仓库、Agent 搜索和变更文件 baseline，估算值标记 `estimated`，正式报告使用目标 tokenizer；
+- clone、checkout、索引或工具调用失败均保留 `status=error`，不得把失败或空响应计为成功；
+- 逐任务原始结果与聚合报告一同保存，报告 Recall、Precision、F1、Task Success、截断率、Token、延迟和成本。
+
+小型 fixture 继续承担快速、确定性的 CI 回归职责；真实仓库集用于发布质量判断，二者不能互相替代。

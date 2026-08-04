@@ -92,6 +92,7 @@ flowchart LR
 - [测试与评测](docs/evaluation.md)
 - [性能与发布验收](docs/performance-report.md)
 - [项目审查与改进建议](docs/project-review.md)
+- [`code-review-graph` 借鉴分析与实施映射](docs/reference-code-review-graph.md)
 - [3 分钟演示脚本](docs/demo-script.md)
 - [故障排查](docs/troubleshooting.md)
 - [实施路线图](docs/roadmap.md)

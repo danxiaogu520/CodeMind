@@ -55,6 +55,10 @@ CodeMind 已经形成结构完整、边界清楚、可演示的单机 MVP：摄�
 4. 为 SQLite BM25 多进程单写多读和 PostgreSQL/Qdrant 容量建立压测拐点，达到阈值后再决定独立检索服务或分布式队列，避免过早拆分模块化单体。
 5. API 补仓库列表、任务列表/取消、分页与管理接口；Demo UI 增加失败恢复、索引警告和降级状态展示。
 
+## 外部项目借鉴结论
+
+2026-07-22 对 `code-review-graph` 的专项审查表明，其 diff-to-symbol、影响半径、Flow/Community、MCP/IDE 和真实仓库评测方法对 Phase 7/8 有参考价值；但其单机 SQLite 中心架构、宽工具面和自动重构能力不应直接迁移。完整对比、目标契约、实施顺序和验收标准见 [`code-review-graph` 借鉴分析与实施映射](reference-code-review-graph.md)。该结论不改变当前“先完成可靠性与安全基线”的优先级。
+
 ## 建议执行顺序
 
 ```text

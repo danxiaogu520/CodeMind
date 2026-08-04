@@ -93,6 +93,9 @@
 - 至少一个真实 Embedding、Reranker 和 LLM Provider；
 - 统一超时、重试、并发、费用、模型版本和回退配置；
 - 扩充真实仓库评测集，覆盖同名符号、大文件、语法错误和多语言关系；
+- 使用固定 commit SHA 建立可复现真实仓库集，引入 grep/read-top-k Agent baseline、多跳检索和逐任务错误记录；
+- 为影响面分析准备 graph-derived、co-change 与人工标注三类真值，避免使用同一张图循环验证自身；
+- 区分全仓库、Agent、变更文件等 Token baseline，并使用目标 tokenizer 校准正式报告；
 - 建立质量/延迟/费用基线和发布回归对比；
 - 缓存与批处理优化，校准 Chunk、召回和上下文预算。
 
@@ -103,12 +106,16 @@
 ### Phase 8：开发者工作流（建议 0.3）
 
 - Git history、diff 与 blame 检索；
-- 影响面分析、变更方案和架构漂移检测；
+- diff 行范围到符号的映射，以及支持方向、边类型、深度、路径、置信度和截断状态的有界图遍历；
+- 影响面分析、候选测试、透明风险因子、变更方案和架构漂移检测；
+- 按真实需求逐步增加入口 Flow 与代码 Community 派生视图，不将其作为代码事实源；
 - 公开 Tree/Symbol/Relation 分页 API；
 - 按语言接入 LSP/编译器符号适配器，Tree-sitter 保持降级路径；
 - LSP 或 VS Code 客户端，支持引用跳转和 Run 观察。
 
 验收：对真实变更任务给出可验证的依赖路径、历史依据、风险和测试建议；编辑器端能够完成导入、查询、跳转和流式进度查看。
+
+设计和评测细节见 [`code-review-graph` 借鉴分析与实施映射](reference-code-review-graph.md)。该参考不改变 Phase 6 优先级，也不授权自动修改代码。
 
 ### Phase 9：平台化与规模扩展（建议 1.0）
 
